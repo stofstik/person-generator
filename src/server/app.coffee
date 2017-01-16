@@ -12,7 +12,7 @@ mongoose 			 = require "mongoose"
 # randomInt = require "./random-int"
 log       = require "./lib/log"
 Generator = require "./lib/Generator"
-SharedData = require "./models/shared-data-model"
+Service   = require "./models/service-model"
 
 app       = express()
 server    = http.createServer app
@@ -60,7 +60,7 @@ io.on "connection", (socket) ->
 # start the server
 mongoose.connect mongoAddress, { server: { auto_reconnect: true } }
 server.listen 0 # let the os choose a random port
-SharedData.findOne { service: "person-generator"}, (err, data) ->
+Service.findOne { name: "person-generator"}, (err, data) ->
 	if(err)
 		return console.log err
 	if(data)
@@ -70,10 +70,10 @@ SharedData.findOne { service: "person-generator"}, (err, data) ->
 			else
 				console.log "updated"
 	else
-		SharedData = new SharedData
-			service: "person-generator"
+		Service = new Service
+			name: "person-generator"
 			port: server.address().port
-		SharedData.save (err) ->
+		Service.save (err) ->
 			if(err)
 				console.log err
 			else
