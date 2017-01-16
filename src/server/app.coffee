@@ -7,9 +7,14 @@ path           = require "path"
 methodOverride = require "method-override"
 socketio       = require "socket.io"
 errorHandler   = require "error-handler"
+mongoose 			 = require "mongoose"
 
+mongooseConnection = mongoose.connect "mongodb://localhost:27017/SharedData"
+
+# randomInt = require "./random-int"
 log       = require "./lib/log"
 Generator = require "./lib/Generator"
+SharedData = require "./models/shared-data-model"
 
 app       = express()
 server    = http.createServer app
@@ -24,7 +29,7 @@ persons = new Generator [ "first", "last", "gender", "birthday", "age", "ssn"]
 # distribute data over the websockets
 persons.on "data", (data) ->
 	data.timestamp = Date.now()
-	socket.emit "persons:create", data for socket in sockets
+	socket.emit "dataGenerated", data for socket in sockets
 
 persons.start()
 
@@ -41,5 +46,23 @@ io.on "connection", (socket) ->
 		log.info "Socket disconnected, #{sockets.length} client(s) active"
 
 # start the server
-server.listen 3002
-log.info "Listening on 3002"
+server.listen 0 # let the os choose a random port
+
+SharedData.findOne { port: { "$gt": 0 } }, (err, data) ->
+	if(err)
+		return console.log err
+	if(data)
+		data.update { port: server.address().port }, (err) ->
+			if(err)
+				console.log err
+			else
+				console.log "updated"
+	else
+		SharedData = new SharedData( { port: server.address().port } )
+		SharedData.save (err) ->
+			if(err)
+				console.log err
+			else
+				console.log "saved"
+
+log.info "Listening on port", server.address().port
