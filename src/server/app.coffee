@@ -9,8 +9,6 @@ socketio       = require "socket.io"
 errorHandler   = require "error-handler"
 mongoose 			 = require "mongoose"
 
-mongoose.connect "mongodb://localhost:27017/Services"
-
 # randomInt = require "./random-int"
 log       = require "./lib/log"
 Generator = require "./lib/Generator"
@@ -19,6 +17,20 @@ SharedData = require "./models/shared-data-model"
 app       = express()
 server    = http.createServer app
 io        = socketio.listen server
+
+mongoAddress = "mongodb://localhost:27017/Services"
+
+# init DB
+db = mongoose.connection
+db.on 'connecting', ->
+	log.info "connecting to mongodb"
+db.on 'error', ->
+	log.info "error connecting to mongodb"
+db.on 'disconnected', ->
+	log.info "disconnected from mongodb"
+	setTimeout ->
+		mongoose.connect mongoAddress, { server: { auto_reconnect: true } }
+	, 5000
 
 # collection of client sockets
 sockets = []
@@ -46,8 +58,8 @@ io.on "connection", (socket) ->
 		log.info "Socket disconnected, #{sockets.length} client(s) active"
 
 # start the server
+mongoose.connect mongoAddress, { server: { auto_reconnect: true } }
 server.listen 0 # let the os choose a random port
-
 SharedData.findOne { service: "person-generator"}, (err, data) ->
 	if(err)
 		return console.log err
