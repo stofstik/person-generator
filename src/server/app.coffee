@@ -9,7 +9,7 @@ socketio       = require "socket.io"
 errorHandler   = require "error-handler"
 mongoose 			 = require "mongoose"
 
-mongooseConnection = mongoose.connect "mongodb://localhost:27017/SharedData"
+mongoose.connect "mongodb://localhost:27017/Services"
 
 # randomInt = require "./random-int"
 log       = require "./lib/log"
@@ -48,7 +48,7 @@ io.on "connection", (socket) ->
 # start the server
 server.listen 0 # let the os choose a random port
 
-SharedData.findOne { port: { "$gt": 0 } }, (err, data) ->
+SharedData.findOne { service: "person-generator"}, (err, data) ->
 	if(err)
 		return console.log err
 	if(data)
@@ -58,7 +58,9 @@ SharedData.findOne { port: { "$gt": 0 } }, (err, data) ->
 			else
 				console.log "updated"
 	else
-		SharedData = new SharedData( { port: server.address().port } )
+		SharedData = new SharedData
+			service: "person-generator"
+			port: server.address().port
 		SharedData.save (err) ->
 			if(err)
 				console.log err
