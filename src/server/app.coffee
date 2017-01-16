@@ -5,7 +5,6 @@ http           = require "http"
 express        = require "express"
 path           = require "path"
 methodOverride = require "method-override"
-bodyParser     = require "body-parser"
 socketio       = require "socket.io"
 errorHandler   = require "error-handler"
 
@@ -40,24 +39,6 @@ io.on "connection", (socket) ->
 		# remove socket from client sockets
 		sockets.splice sockets.indexOf(socket), 1
 		log.info "Socket disconnected, #{sockets.length} client(s) active"
-
-# express application middleware
-app
-	.use bodyParser.urlencoded extended: true
-	.use bodyParser.json()
-	.use methodOverride()
-	.use express.static path.resolve __dirname, "../client"
-
-# express application settings
-app
-	.set "view engine", "jade"
-	.set "views", path.resolve __dirname, "./views"
-	.set "trust proxy", true
-
-# express application routess
-app
-	.get "/", (req, res, next) ->
-		res.render "main"
 
 # start the server
 server.listen 3002
