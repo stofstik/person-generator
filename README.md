@@ -12,6 +12,7 @@ This way we can connect to this service from another service.
 - Seperate registry service with easy (REST) instance subscription and health/alive checks
 
 ### Installation
+- `npm install -g gulp`
 - `npm install`
 - `gulp`
 - `localhost:3000`
