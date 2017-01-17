@@ -9,6 +9,8 @@ socketio       = require "socket.io"
 errorHandler   = require "error-handler"
 mongoose			 = require "mongoose"
 
+SERVICE_NAME = "person-generator"
+
 # randomInt = require "./random-int"
 log       = require "./lib/log"
 Generator = require "./lib/Generator"
@@ -20,17 +22,17 @@ io        = socketio.listen server
 
 mongoAddress = "mongodb://localhost:27017/Services"
 
-# init DB
+# init mongo status logging
 db = mongoose.connection
+db.on 'connected', ->
+	log.info "connected to mongodb"
 db.on 'connecting', ->
 	log.info "connecting to mongodb"
-db.on 'error', ->
+db.on 'error', (err) ->
+	console.error err
 	log.info "error connecting to mongodb"
 db.on 'disconnected', ->
 	log.info "disconnected from mongodb"
-	setTimeout ->
-		mongoose.connect mongoAddress, { server: { auto_reconnect: true } }
-	, 5000
 
 # collection of client sockets
 sockets = []
@@ -58,25 +60,19 @@ io.on "connection", (socket) ->
 		log.info "Socket disconnected, #{sockets.length} client(s) active"
 
 # start the server
-mongoose.connect mongoAddress, { server: { auto_reconnect: true } }
-server.listen 0 # let the os choose a random port
-Service.findOne { name: "person-generator"}, (err, data) ->
-	if(err)
-		return console.log err
-	if(data)
-		data.update { port: server.address().port }, (err) ->
-			if(err)
-				console.log err
-			else
-				console.log "updated"
-	else
-		Service = new Service
-			name: "person-generator"
-			port: server.address().port
-		Service.save (err) ->
-			if(err)
-				console.log err
-			else
-				console.log "saved"
+mongoose.connect mongoAddress
+# let the os choose a random port
+server.listen 0
+# save the service info in the db
+Service.findOneAndUpdate
+	name: SERVICE_NAME
+	{ name: SERVICE_NAME, port: server.address().port }
+	upsert:							 true
+	returnNewDocument: 	 true
+	setDefaultsOnInsert: true
+	(err, data) ->
+		if(err)
+			return console.error err
+		log.info "saved service: %s @ %s", SERVICE_NAME, server.address().port
 
 log.info "Listening on port", server.address().port
