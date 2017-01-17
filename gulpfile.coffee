@@ -1,6 +1,4 @@
 externals = [
-	{ require: "underscore" }
-	{ require: "async" }
 	{ require: "socket.io-client" }
 ]
 

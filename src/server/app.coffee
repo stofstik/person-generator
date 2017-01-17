@@ -1,23 +1,13 @@
-# required modules
-_              = require "underscore"
-async          = require "async"
 http           = require "http"
-express        = require "express"
-path           = require "path"
-methodOverride = require "method-override"
 socketio       = require "socket.io"
-errorHandler   = require "error-handler"
 mongoose			 = require "mongoose"
 
-SERVICE_NAME = "person-generator"
-
-# randomInt = require "./random-int"
 log       = require "./lib/log"
 Generator = require "./lib/Generator"
 Service   = require "./models/service-model"
 
-app       = express()
-server    = http.createServer app
+# server without a handler we do not need to serve files
+server    = http.createServer null
 io        = socketio.listen server
 
 mongoAddress = "mongodb://localhost:27017/Services"
@@ -43,21 +33,25 @@ persons = new Generator [ "first", "last", "gender", "birthday", "age", "ssn"]
 # distribute data over the websockets
 persons.on "data", (data) ->
 	data.timestamp = Date.now()
+	# filter some data
+	# if(data.gender == 'Male')
+		# return
+	# if(data.age > 35)
+		# return
 	socket.emit "dataGenerated", data for socket in sockets
-
 persons.start()
 
 # websocket connection logic
 io.on "connection", (socket) ->
 	# add socket to client sockets
 	sockets.push socket
-	log.info "Socket connected, #{sockets.length} client(s) active"
+	log.info "Socket connected, #{sockets.length} connection(s) active"
 
 	# disconnect logic
 	socket.on "disconnect", ->
 		# remove socket from client sockets
 		sockets.splice sockets.indexOf(socket), 1
-		log.info "Socket disconnected, #{sockets.length} client(s) active"
+		log.info "Socket disconnected, #{sockets.length} connection(s) active"
 
 # start the server
 mongoose.connect mongoAddress
@@ -65,14 +59,14 @@ mongoose.connect mongoAddress
 server.listen 0
 # save the service info in the db
 Service.findOneAndUpdate
-	name: SERVICE_NAME
-	{ name: SERVICE_NAME, port: server.address().port }
+	name: Service.SERVICE_NAME
+	{ name: Service.SERVICE_NAME, port: server.address().port }
 	upsert:							 true
 	returnNewDocument: 	 true
 	setDefaultsOnInsert: true
 	(err, data) ->
 		if(err)
 			return console.error err
-		log.info "saved service: %s @ %s", SERVICE_NAME, server.address().port
+		log.info "saved service: %s @ %s", Service.SERVICE_NAME, server.address().port
 
 log.info "Listening on port", server.address().port
