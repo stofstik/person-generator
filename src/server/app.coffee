@@ -6,7 +6,6 @@ SERVICE_NAME = "person-generator"
 
 log       = require "./lib/log"
 Generator = require "./lib/Generator"
-Service   = require "./models/service-model"
 
 # server without a handler we do not need to serve files
 server    = http.createServer null
@@ -50,10 +49,14 @@ serviceRegistry = ioClient.connect servRegAddress,
 
 # when we are connected to the registry start the service
 serviceRegistry.on "connect", (socket) ->
+  log.info "service registry connected"
   # let the os choose a random port
   server.listen 0
+  log.info "Listening on port", server.address().port
+  # tell registry we are a service
   serviceRegistry.emit "service-up",
     name: SERVICE_NAME
     port: server.address().port
 
-  log.info "Listening on port", server.address().port
+serviceRegistry.on "disconnect", () ->
+  log.info "service registry disconnected"
