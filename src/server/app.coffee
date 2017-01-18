@@ -28,7 +28,8 @@ persons.on "data", (data) ->
     # return
   # if(data.age > 35)
     # return
-  socket.emit "dataGenerated", data for socket in sockets
+  console.log data
+  socket.emit "data", data for socket in sockets
 persons.start()
 
 # websocket connection logic
