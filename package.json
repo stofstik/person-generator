@@ -9,7 +9,7 @@
   "scripts": {
     "test": "test"
   },
-  "author": "stofstik",
+  "author": "viriciti",
   "license": "ISC",
   "devDependencies": {
     "coffee-project": "^1.6.1",
@@ -18,7 +18,6 @@
   },
   "dependencies": {
     "chance": "^0.7.5",
-    "mongoose": "^4.7.7",
     "socket.io": "^1.3.5",
     "winston": "^1.0.0"
   }

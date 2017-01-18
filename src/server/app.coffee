@@ -1,6 +1,8 @@
 http           = require "http"
 socketio       = require "socket.io"
-mongoose			 = require "mongoose"
+ioClient       = require "socket.io-client"
+
+SERVICE_NAME = "person-generator"
 
 log       = require "./lib/log"
 Generator = require "./lib/Generator"
@@ -10,19 +12,8 @@ Service   = require "./models/service-model"
 server    = http.createServer null
 io        = socketio.listen server
 
-mongoAddress = "mongodb://localhost:27017/Services"
-
-# init mongo status logging
-db = mongoose.connection
-db.on 'connected', ->
-	log.info "connected to mongodb"
-db.on 'connecting', ->
-	log.info "connecting to mongodb"
-db.on 'error', (err) ->
-	console.error err
-	log.info "error connecting to mongodb"
-db.on 'disconnected', ->
-	log.info "disconnected from mongodb"
+# fixed location of service registry
+servRegAddress = "http://localhost:3001"
 
 # collection of client sockets
 sockets = []
@@ -32,41 +23,37 @@ persons = new Generator [ "first", "last", "gender", "birthday", "age", "ssn"]
 
 # distribute data over the websockets
 persons.on "data", (data) ->
-	data.timestamp = Date.now()
-	# filter some data
-	# if(data.gender == 'Male')
-		# return
-	# if(data.age > 35)
-		# return
-	socket.emit "dataGenerated", data for socket in sockets
+  data.timestamp = Date.now()
+  # filter some data
+  # if(data.gender == 'Male')
+    # return
+  # if(data.age > 35)
+    # return
+  socket.emit "dataGenerated", data for socket in sockets
 persons.start()
 
 # websocket connection logic
 io.on "connection", (socket) ->
-	# add socket to client sockets
-	sockets.push socket
-	log.info "Socket connected, #{sockets.length} connection(s) active"
+  # add socket to client sockets
+  sockets.push socket
+  log.info "Socket connected, #{sockets.length} connection(s) active"
 
-	# disconnect logic
-	socket.on "disconnect", ->
-		# remove socket from client sockets
-		sockets.splice sockets.indexOf(socket), 1
-		log.info "Socket disconnected, #{sockets.length} connection(s) active"
+  # disconnect logic
+  socket.on "disconnect", ->
+    # remove socket from client sockets
+    sockets.splice sockets.indexOf(socket), 1
+    log.info "Socket disconnected, #{sockets.length} connection(s) active"
 
-# start the server
-mongoose.connect mongoAddress
-# let the os choose a random port
-server.listen 0
-# save the service info in the db
-Service.findOneAndUpdate
-	name: Service.SERVICE_NAME
-	{ name: Service.SERVICE_NAME, port: server.address().port }
-	upsert:							 true
-	returnNewDocument: 	 true
-	setDefaultsOnInsert: true
-	(err, data) ->
-		if(err)
-			return console.error err
-		log.info "saved service: %s @ %s", Service.SERVICE_NAME, server.address().port
+# connect to the service registry
+serviceRegistry = ioClient.connect servRegAddress,
+  "reconnection": true
 
-log.info "Listening on port", server.address().port
+# when we are connected to the registry start the service
+serviceRegistry.on "connect", (socket) ->
+  # let the os choose a random port
+  server.listen 0
+  serviceRegistry.emit "service-up",
+    name: SERVICE_NAME
+    port: server.address().port
+
+  log.info "Listening on port", server.address().port
