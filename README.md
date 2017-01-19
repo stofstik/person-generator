@@ -7,7 +7,7 @@ An assignment for a job opening.
 Generator is from https://github.com/viriciti/example-application.  
 Starts on a random port and registers with a service registry.  
 https://github.com/stofstik/service-registry  
-This way we can connect to this service from another service.
+This way we can connect to this service from another service without having to know the port.
 
 ### Installation
 - `npm install -g gulp`
@@ -16,3 +16,6 @@ This way we can connect to this service from another service.
 - `localhost:3000`
 
 Make sure you have https://github.com/stofstik/service-registry running.
+
+### Credits
+@ViriCity https://github.com/viriciti/example-application
