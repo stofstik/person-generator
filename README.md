@@ -18,4 +18,4 @@ This way we can connect to this service from another service without having to k
 Make sure you have https://github.com/stofstik/service-registry running.
 
 ### Credits
-@viricity https://github.com/viriciti/example-application
+<a href="https://github.com/viricity">ViriCiti ©</a> https://github.com/viriciti/example-application
