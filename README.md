@@ -17,5 +17,5 @@ If another service wants to connect to us, it will ask the service-registry for 
 Make sure you have https://github.com/stofstik/service-registry running.
 
 ### Credits
-<a href="https://github.com/viricity">ViriCiti©</a>  
-Generator extracted from: https://github.com/viriciti/example-application
+- <a href="https://www.viriciti.com/">ViriCiti</a>
+- Generator extracted from: https://github.com/viriciti/example-application
